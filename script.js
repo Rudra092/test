@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const VALID_DURATION = 1 * 60 * 1000; // 1 minute
+  const VALID_DURATION = 24 * 60 * 1000; // 24 hour
   const now = Date.now();
 
   const fullPath = window.location.pathname + window.location.search;
