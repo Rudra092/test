@@ -1,30 +1,51 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const currentURL = window.location.href;
   const fullPath = window.location.pathname + window.location.search;
+  const VALID_DURATION = 1 * 60 * 1000; // 1 minutes in milliseconds
 
-  // Check if there's a stored "valid" URL
-  const lastValidURL = localStorage.getItem("validDynamicURL");
+  const storedData = JSON.parse(localStorage.getItem("validDynamicURLInfo"));
 
-  // If user is visiting a URL that's not the valid one
-  if (lastValidURL && lastValidURL !== fullPath) {
-    document.body.innerHTML = "<h2>This URL is no longer active.</h2>";
-    return; // Stop further execution
-  }
+  const now = Date.now();
 
-  // If no query string, generate a new one
-  if (!window.location.search) {
-    const randomId = Math.floor(Math.random() * 100000);
-    const newURL = `${window.location.pathname}?id=${randomId}`;
-    window.history.replaceState({}, "", newURL);
-    localStorage.setItem("validDynamicURL", window.location.pathname + "?id=" + randomId);
+  if (storedData) {
+    const { url, timestamp, used } = storedData;
+
+    // If URL is expired or already used or different from current
+    if (now - timestamp > VALID_DURATION || used || url !== fullPath) {
+      document.body.innerHTML = "<h2>This URL has expired or is no longer active.</h2>";
+      return;
+    }
+
+    // Mark as used (one-time only)
+    localStorage.setItem(
+      "validDynamicURLInfo",
+      JSON.stringify({ url, timestamp, used: true })
+    );
   } else {
-    // This is a valid URL – store it
-    localStorage.setItem("validDynamicURL", fullPath);
+    // First-time visitor — no query string? generate one
+    if (!window.location.search) {
+      const randomId = Math.floor(Math.random() * 100000);
+      const newURL = `${window.location.pathname}?id=${randomId}`;
+      window.history.replaceState({}, "", newURL);
+
+      // Save the new URL and timestamp
+      localStorage.setItem(
+        "validDynamicURLInfo",
+        JSON.stringify({
+          url: window.location.pathname + "?id=" + randomId,
+          timestamp: now,
+          used: false,
+        })
+      );
+    } else {
+      // User loaded a random ID without going through the generator — block access
+      document.body.innerHTML = "<h2>Invalid or expired access.</h2>";
+      return;
+    }
   }
 
-  // Optional: Display confirmation
+  // ✅ Show valid message
   const output = document.getElementById("output");
   if (output) {
-    output.innerHTML = `<p>This URL is active: <strong>${fullPath}</strong></p>`;
+    output.innerHTML = `<p>This URL is active and usable ONCE within 5 minutes: <strong>${fullPath}</strong></p>`;
   }
 });
