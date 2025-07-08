@@ -1,9 +1,12 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const VALID_DURATION = 1 * 60 * 1000; // 1 minutes in milliseconds
+  const VALID_DURATION = 1 * 60 * 1000; // 1 minute
   const now = Date.now();
 
   const fullPath = window.location.pathname + window.location.search;
   const storedData = JSON.parse(localStorage.getItem("validDynamicURLInfo"));
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const hasId = urlParams.has("id");
 
   const isValidStoredURL =
     storedData &&
@@ -15,21 +18,24 @@ document.addEventListener("DOMContentLoaded", () => {
     // ✅ Valid and unused — allow
     const output = document.getElementById("output");
     if (output) {
-      output.innerHTML = `<p>This URL is active and usable ONCE within 5 minutes: <strong>${fullPath}</strong></p>`;
+      output.innerHTML = `<p>This URL is active and usable ONCE within 1 minute: <strong>${fullPath}</strong></p>`;
     }
 
     // Mark as used
     storedData.used = true;
     localStorage.setItem("validDynamicURLInfo", JSON.stringify(storedData));
+  } else if (hasId) {
+    // ❌ Has ?id but it's invalid/expired/used
+    document.body.innerHTML = "<h2>This URL has expired or is no longer active.</h2>";
   } else {
-    // ❌ Invalid or expired — generate new URL
+    // 🆕 First-time visit (no ?id) → generate new
     const newId = Math.floor(Math.random() * 100000);
     const newURL = `${window.location.pathname}?id=${newId}`;
 
-    // Update browser URL without reloading
+    // Update URL
     window.history.replaceState({}, "", newURL);
 
-    // Store the new valid URL
+    // Save as valid URL
     localStorage.setItem(
       "validDynamicURLInfo",
       JSON.stringify({
@@ -39,7 +45,7 @@ document.addEventListener("DOMContentLoaded", () => {
       })
     );
 
-    // Refresh the page with new state
-    location.reload(); // 💡 Important to trigger logic again
+    // Trigger logic again with new URL (safe reload)
+    location.reload();
   }
 });
