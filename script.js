@@ -3,52 +3,31 @@ document.addEventListener("DOMContentLoaded", () => {
   const now = Date.now();
 
   const urlParams = new URLSearchParams(window.location.search);
-  const hasId = urlParams.has("id");
-
   const currentId = urlParams.get("id");
-  const fullPath = window.location.pathname + `?id=${currentId}`;
+  const hasId = currentId !== null;
 
-  // Retrieve stored record
+  const fullPath = window.location.pathname + (hasId ? `?id=${currentId}` : "");
+
   const storedData = JSON.parse(localStorage.getItem("validDynamicURLInfo"));
 
-  // CASE 1: ?id present, check if it's still valid
-  if (hasId) {
-    if (storedData && storedData.url === fullPath) {
-      const notExpired = now - storedData.timestamp <= VALID_DURATION;
+  // ✅ CASE 1: Has valid ID and stored, still within 24h
+  if (hasId && storedData && storedData.url === fullPath) {
+    const notExpired = now - storedData.timestamp <= VALID_DURATION;
 
-      if (notExpired) {
-        const output = document.getElementById("output");
-        if (output) {
-          output.innerHTML = `<p>This URL is active and valid for 24 hours: <strong>${fullPath}</strong></p>`;
-        }
-        return;
-      } else {
-        document.body.innerHTML = "<h2>This URL has expired.</h2>";
-        return;
-      }
-    } else {
-      // No local match, but allow this ID to be stored now
-      localStorage.setItem(
-        "validDynamicURLInfo",
-        JSON.stringify({
-          url: fullPath,
-          timestamp: now
-        })
-      );
-
+    if (notExpired) {
       const output = document.getElementById("output");
       if (output) {
-        output.innerHTML = `<p>This is a newly stored URL valid for 24 hours: <strong>${fullPath}</strong></p>`;
+        output.innerHTML = `<p>This URL is active and valid for 24 hours: <strong>${fullPath}</strong></p>`;
       }
       return;
     }
   }
 
-  // CASE 2: No ?id — generate one
+  // 🆕 CASE 2: ID is expired, or no ID — generate a new one
   const newId = Math.floor(Math.random() * 100000);
   const newURL = `${window.location.pathname}?id=${newId}`;
 
-  // Store in localStorage
+  // Store it
   localStorage.setItem(
     "validDynamicURLInfo",
     JSON.stringify({
@@ -57,11 +36,11 @@ document.addEventListener("DOMContentLoaded", () => {
     })
   );
 
-  // Replace URL in-place (no reload)
+  // Replace current URL and rerun script
   window.history.replaceState({}, "", newURL);
 
   const output = document.getElementById("output");
   if (output) {
-    output.innerHTML = `<p>New URL created and valid for 24 hours: <strong>${newURL}</strong></p>`;
+    output.innerHTML = `<p>New URL generated (valid for 24 hours): <strong>${newURL}</strong></p>`;
   }
 });
