@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const VALID_DURATION = 24 * 60 * 1000; // 24 hour
+  const VALID_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
   const now = Date.now();
 
   const fullPath = window.location.pathname + window.location.search;
@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // ✅ Valid and unused — allow
     const output = document.getElementById("output");
     if (output) {
-      output.innerHTML = `<p>This URL is active and usable ONCE within 1 minute: <strong>${fullPath}</strong></p>`;
+      output.innerHTML = `<p>This URL is active and usable ONCE within 24 hours: <strong>${fullPath}</strong></p>`;
     }
 
     // Mark as used
